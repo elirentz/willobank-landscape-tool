@@ -7,12 +7,13 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 3000,
-    allowedHosts: 'all',  // This should allow rentz-server-1
+    allowedHosts: ['localhost', '127.0.0.1', 'rentz-server-1', '.local'],
     watch: {
       usePolling: true,
     },
     hmr: {
       port: 3000,
+      host: '0.0.0.0',
     },
   },
   build: {
