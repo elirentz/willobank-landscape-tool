@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Minus, Check, AlertTriangle, TreePine, Droplets, Home, Users } from 'lucide-react';
+import { Plus, Minus, Check, AlertTriangle, TreePine, Droplets, Home, Users, Leaf } from 'lucide-react';
 import { requirementsApi } from '../services/api';
+import PlantSection from './PlantSection';
 
 const WillowbankPlanner = () => {
   const [requirements, setRequirements] = useState({
@@ -12,6 +13,7 @@ const WillowbankPlanner = () => {
   const [error, setError] = useState(null);
   const [newItem, setNewItem] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('needs');
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'plants', 'phases'
 
   // Load requirements on component mount
   useEffect(() => {
@@ -133,12 +135,11 @@ const WillowbankPlanner = () => {
     "Compost: 4 cubic yards per 1,000 sq ft required"
   ];
 
-  const plantRecommendations = {
-    privacy: ["Ceanothus 'Ray Hartman'", "Heteromeles arbutifolia", "Quercus agrifolia"],
-    pollinators: ["Lavandula stoechas", "Salvia 'May Night'", "Eschscholzia californica"],
-    vegetables: ["Mediterranean herbs", "Drought-tolerant vegetables", "Fruit trees (if space)"],
-    wildlife: ["Native grasses", "Berry-producing shrubs", "Oak trees (where setbacks allow)"]
-  };
+  const tabs = [
+    { key: 'overview', label: 'Overview', icon: Home },
+    { key: 'plants', label: 'Plant Database', icon: Leaf },
+    { key: 'phases', label: 'Implementation', icon: Check }
+  ];
 
   if (loading) {
     return (
@@ -173,178 +174,202 @@ const WillowbankPlanner = () => {
         </div>
       )}
 
-      {/* Requirements Section */}
-      <div className="grid md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-red-800 mb-3 flex items-center">
-            <AlertTriangle className="w-5 h-5 mr-2" />
-            NEEDS (Must Have)
-          </h3>
-          <ul className="space-y-2">
-            {requirements.needs.map((item) => (
-              <li key={item.id} className="flex items-center justify-between text-sm">
-                <span>{item.description}</span>
-                <button 
-                  onClick={() => removeItem('needs', item.id)}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-blue-800 mb-3 flex items-center">
-            <TreePine className="w-5 h-5 mr-2" />
-            WANTS (High Priority)
-          </h3>
-          <ul className="space-y-2">
-            {requirements.wants.map((item) => (
-              <li key={item.id} className="flex items-center justify-between text-sm">
-                <span>{item.description}</span>
-                <button 
-                  onClick={() => removeItem('wants', item.id)}
-                  className="text-blue-500 hover:text-blue-700"
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-green-800 mb-3 flex items-center">
-            <Users className="w-5 h-5 mr-2" />
-            NICE TO HAVES (Future)
-          </h3>
-          <ul className="space-y-2">
-            {requirements['nice-to-haves'].map((item) => (
-              <li key={item.id} className="flex items-center justify-between text-sm">
-                <span>{item.description}</span>
-                <button 
-                  onClick={() => removeItem('nice-to-haves', item.id)}
-                  className="text-green-500 hover:text-green-700"
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+      {/* Navigation Tabs */}
+      <div className="border-b border-gray-200 mb-8">
+        <nav className="flex space-x-8">
+          {tabs.map(tab => {
+            const IconComponent = tab.icon;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === tab.key
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <IconComponent className="w-4 h-4" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
       </div>
 
-      {/* Add New Item */}
-      <div className="bg-gray-50 rounded-lg p-4 mb-8">
-        <h3 className="text-lg font-semibold mb-3">Add New Requirement</h3>
-        <div className="flex gap-3">
-          <select 
-            value={selectedCategory} 
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="border rounded px-3 py-2"
-          >
-            <option value="needs">NEEDS</option>
-            <option value="wants">WANTS</option>
-            <option value="nice-to-haves">NICE TO HAVES</option>
-          </select>
-          <input 
-            type="text" 
-            value={newItem}
-            onChange={(e) => setNewItem(e.target.value)}
-            placeholder="Enter new requirement..."
-            className="flex-1 border rounded px-3 py-2"
-            onKeyPress={(e) => e.key === 'Enter' && addItem()}
-          />
-          <button 
-            onClick={addItem}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center"
-          >
-            <Plus className="w-4 h-4 mr-1" />
-            Add
-          </button>
-        </div>
-      </div>
-
-      {/* Implementation Phases */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Step-by-Step Implementation Plan</h2>
-        <div className="space-y-4">
-          {phases.map((phase, index) => (
-            <div key={index} className={`rounded-lg border-2 ${phase.color} p-6`}>
-              <div className="flex items-center mb-4">
-                {phase.icon}
-                <h3 className="text-xl font-semibold ml-3">{phase.title}</h3>
-              </div>
-              <ul className="grid md:grid-cols-2 gap-2">
-                {phase.tasks.map((task, taskIndex) => (
-                  <li key={taskIndex} className="flex items-start text-sm">
-                    <Check className="w-4 h-4 mr-2 mt-1 text-green-600 flex-shrink-0" />
-                    {task}
+      {/* Tab Content */}
+      {activeTab === 'overview' && (
+        <div>
+          {/* Requirements Section */}
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-red-800 mb-3 flex items-center">
+                <AlertTriangle className="w-5 h-5 mr-2" />
+                NEEDS (Must Have)
+              </h3>
+              <ul className="space-y-2">
+                {requirements.needs.map((item) => (
+                  <li key={item.id} className="flex items-center justify-between text-sm">
+                    <span>{item.description}</span>
+                    <button 
+                      onClick={() => removeItem('needs', item.id)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
                   </li>
                 ))}
               </ul>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Compliance Notes */}
-      <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 mb-8">
-        <h3 className="text-lg font-semibold text-yellow-800 mb-3">
-          🚨 Yolo County Compliance Requirements
-        </h3>
-        <ul className="space-y-2">
-          {complianceNotes.map((note, index) => (
-            <li key={index} className="text-sm flex items-start">
-              <AlertTriangle className="w-4 h-4 mr-2 mt-1 text-yellow-600 flex-shrink-0" />
-              {note}
-            </li>
-          ))}
-        </ul>
-      </div>
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-blue-800 mb-3 flex items-center">
+                <TreePine className="w-5 h-5 mr-2" />
+                WANTS (High Priority)
+              </h3>
+              <ul className="space-y-2">
+                {requirements.wants.map((item) => (
+                  <li key={item.id} className="flex items-center justify-between text-sm">
+                    <span>{item.description}</span>
+                    <button 
+                      onClick={() => removeItem('wants', item.id)}
+                      className="text-blue-500 hover:text-blue-700"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-      {/* Plant Recommendations */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {Object.entries(plantRecommendations).map(([category, plants]) => (
-          <div key={category} className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <h4 className="font-semibold capitalize text-green-800 mb-2">{category}</h4>
-            <ul className="text-sm space-y-1">
-              {plants.map((plant, index) => (
-                <li key={index} className="text-green-700">• {plant}</li>
+            <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-green-800 mb-3 flex items-center">
+                <Users className="w-5 h-5 mr-2" />
+                NICE TO HAVES (Future)
+              </h3>
+              <ul className="space-y-2">
+                {requirements['nice-to-haves'].map((item) => (
+                  <li key={item.id} className="flex items-center justify-between text-sm">
+                    <span>{item.description}</span>
+                    <button 
+                      onClick={() => removeItem('nice-to-haves', item.id)}
+                      className="text-green-500 hover:text-green-700"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Add New Item */}
+          <div className="bg-gray-50 rounded-lg p-4 mb-8">
+            <h3 className="text-lg font-semibold mb-3">Add New Requirement</h3>
+            <div className="flex gap-3">
+              <select 
+                value={selectedCategory} 
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="border rounded px-3 py-2"
+              >
+                <option value="needs">NEEDS</option>
+                <option value="wants">WANTS</option>
+                <option value="nice-to-haves">NICE TO HAVES</option>
+              </select>
+              <input 
+                type="text" 
+                value={newItem}
+                onChange={(e) => setNewItem(e.target.value)}
+                placeholder="Enter new requirement..."
+                className="flex-1 border rounded px-3 py-2"
+                onKeyPress={(e) => e.key === 'Enter' && addItem()}
+              />
+              <button 
+                onClick={addItem}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Add
+              </button>
+            </div>
+          </div>
+
+          {/* Compliance Notes */}
+          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 mb-8">
+            <h3 className="text-lg font-semibold text-yellow-800 mb-3">
+              🚨 Yolo County Compliance Requirements
+            </h3>
+            <ul className="space-y-2">
+              {complianceNotes.map((note, index) => (
+                <li key={index} className="text-sm flex items-start">
+                  <AlertTriangle className="w-4 h-4 mr-2 mt-1 text-yellow-600 flex-shrink-0" />
+                  {note}
+                </li>
               ))}
             </ul>
           </div>
-        ))}
-      </div>
 
-      {/* Budget Estimation */}
-      <div className="bg-gray-50 rounded-lg p-6">
-        <h3 className="text-lg font-semibold mb-4">Estimated Budget Ranges</h3>
-        <div className="grid md:grid-cols-4 gap-4 text-sm">
-          <div className="bg-white p-3 rounded border">
-            <div className="font-semibold">Phase 1: Planning</div>
-            <div className="text-gray-600">$2,000 - $5,000</div>
-          </div>
-          <div className="bg-white p-3 rounded border">
-            <div className="font-semibold">Phase 2: Infrastructure</div>
-            <div className="text-gray-600">$4,000 - $8,000</div>
-            <div className="text-xs text-green-600">💰 Existing irrigation saves ~$3-5K</div>
-          </div>
-          <div className="bg-white p-3 rounded border">
-            <div className="font-semibold">Phase 3: Plants</div>
-            <div className="text-gray-600">$5,000 - $12,000</div>
-          </div>
-          <div className="bg-white p-3 rounded border">
-            <div className="font-semibold">Phase 4: Finishing</div>
-            <div className="text-gray-600">$2,000 - $5,000</div>
+          {/* Budget Estimation */}
+          <div className="bg-gray-50 rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4">Estimated Budget Ranges</h3>
+            <div className="grid md:grid-cols-4 gap-4 text-sm">
+              <div className="bg-white p-3 rounded border">
+                <div className="font-semibold">Phase 1: Planning</div>
+                <div className="text-gray-600">$2,000 - $5,000</div>
+              </div>
+              <div className="bg-white p-3 rounded border">
+                <div className="font-semibold">Phase 2: Infrastructure</div>
+                <div className="text-gray-600">$4,000 - $8,000</div>
+                <div className="text-xs text-green-600">💰 Existing irrigation saves ~$3-5K</div>
+              </div>
+              <div className="bg-white p-3 rounded border">
+                <div className="font-semibold">Phase 3: Plants</div>
+                <div className="text-gray-600">$5,000 - $12,000</div>
+              </div>
+              <div className="bg-white p-3 rounded border">
+                <div className="font-semibold">Phase 4: Finishing</div>
+                <div className="text-gray-600">$2,000 - $5,000</div>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              *Total estimated: $13,000-$30,000 over 8-9 months. Existing irrigation saves significant time and cost!
+            </p>
           </div>
         </div>
-        <p className="text-xs text-gray-500 mt-2">
-          *Total estimated: $13,000-$30,000 over 8-9 months. Existing irrigation saves significant time and cost!
-        </p>
-      </div>
+      )}
+
+      {activeTab === 'plants' && (
+        <div>
+          <PlantSection />
+        </div>
+      )}
+
+      {activeTab === 'phases' && (
+        <div>
+          {/* Implementation Phases */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Step-by-Step Implementation Plan</h2>
+            <div className="space-y-4">
+              {phases.map((phase, index) => (
+                <div key={index} className={`rounded-lg border-2 ${phase.color} p-6`}>
+                  <div className="flex items-center mb-4">
+                    {phase.icon}
+                    <h3 className="text-xl font-semibold ml-3">{phase.title}</h3>
+                  </div>
+                  <ul className="grid md:grid-cols-2 gap-2">
+                    {phase.tasks.map((task, taskIndex) => (
+                      <li key={taskIndex} className="flex items-start text-sm">
+                        <Check className="w-4 h-4 mr-2 mt-1 text-green-600 flex-shrink-0" />
+                        {task}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

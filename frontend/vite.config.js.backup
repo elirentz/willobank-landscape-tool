@@ -7,18 +7,23 @@ services:
       dockerfile: Dockerfile
       target: development
     ports:
-      - "${FRONTEND_PORT:-3000}:3000"
+      - "0.0.0.0:${FRONTEND_PORT:-3000}:3000"  # Explicit all-interface binding
     volumes:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      # Flexible API URL - works for localhost and remote servers
+      # Allow flexible API URL via environment
       - VITE_API_URL=${VITE_API_URL:-http://localhost:3001}
       - CHOKIDAR_USEPOLLING=true
+      # Force Vite to allow all hosts
+      - VITE_HOST=0.0.0.0
+      - VITE_ALLOWED_HOSTS=all
     depends_on:
       - backend
     networks:
       - willowbank-net
+    # Override the start command to ensure proper host binding
+    command: npm run dev -- --host 0.0.0.0
 
   backend:
     build:
@@ -26,7 +31,7 @@ services:
       dockerfile: Dockerfile
       target: development
     ports:
-      - "${BACKEND_PORT:-3001}:3001"
+      - "0.0.0.0:${BACKEND_PORT:-3001}:3001"  # Explicit all-interface binding
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -34,7 +39,7 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - DATABASE_PATH=/app/data/willowbank.db
-      # Flexible CORS origin
+      # Allow multiple origins for development
       - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
     networks:
       - willowbank-net
